@@ -1,0 +1,16 @@
+{
+  "name": "jace-bot-md-deploy",
+  "version": "1.0.0",
+  "description": "Site de déploiement Vercel pour JACE BOT MD",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "@hapi/boom": "^10.0.1",
+    "pino": "^9.4.0",
+    "node-cache": "^5.1.2"
+  }
+}
