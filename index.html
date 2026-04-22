@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JACE BOT MD — Déploiement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060a0f;
+      --surface: #0d1520;
+      --surface2: #111d2e;
+      --border: #1a2d44;
+      --accent: #00e5ff;
+      --accent2: #39ff6e;
+      --accent3: #ff4d6d;
+      --text: #e8f4f8;
+      --muted: #5a7a90;
+      --glow: 0 0 30px rgba(0,229,255,0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== BACKGROUND GRID ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0,229,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== NAVIGATION ===== */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(6,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: 0.05em;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #0077ff);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .nav-tabs {
+      display: flex; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .nav-tab {
+      padding: 7px 18px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-tab.active {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .nav-tab:hover:not(.active) { color: var(--text); }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem; color: var(--accent2);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57,255,110,0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(57,255,110,0); }
+    }
+
+    /* ===== PAGES ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 80px 40px 60px;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem; font-weight: 500;
+      color: var(--accent);
+      border: 1px solid rgba(0,229,255,0.3);
+      background: rgba(0,229,255,0.05);
+      padding: 5px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent) 0%, #0088ff 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.05rem; color: var(--muted); max-width: 520px; margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    /* ===== PAIR CARD ===== */
+    .pair-container {
+      position: relative; z-index: 1;
+      max-width: 500px; margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    .pair-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pair-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .pair-card h2 {
+      font-size: 1.2rem; font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .pair-card p {
+      font-size: 0.85rem; color: var(--muted);
+      margin-bottom: 28px; line-height: 1.6;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem; color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .phone-input-wrap {
+      display: flex; gap: 10px; align-items: stretch;
+    }
+
+    .flag-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      padding: 0 12px;
+      cursor: pointer;
+      outline: none;
+      min-width: 90px;
+    }
+
+    .flag-select:focus { border-color: var(--accent); }
+
+    .phone-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .phone-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+    }
+
+    .phone-input::placeholder { color: var(--muted); }
+
+    .btn-pair {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #0088ff);
+      border: none; border-radius: 12px;
+      color: var(--bg);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-pair:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(0,229,255,0.3);
+    }
+
+    .btn-pair:active { transform: translateY(0); }
+    .btn-pair:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-pair .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(6,10,15,0.3);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== CODE RESULT ===== */
+    .code-result {
+      display: none;
+      margin-top: 24px;
+      background: var(--bg);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .code-result.show { display: block; }
+
+    .code-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem; color: var(--muted);
+      letter-spacing: 0.1em; margin-bottom: 12px;
+    }
+
+    .code-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 2rem; font-weight: 600;
+      color: var(--accent2);
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+      text-shadow: 0 0 20px rgba(57,255,110,0.4);
+    }
+
+    .code-hint {
+      font-size: 0.8rem; color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .code-hint strong { color: var(--text); }
+
+    .btn-copy {
+      margin-top: 14px;
+      padding: 8px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+    .error-msg {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(255,77,109,0.1);
+      border: 1px solid rgba(255,77,109,0.3);
+      border-radius: 10px;
+      color: var(--accent3);
+      font-size: 0.83rem;
+      text-align: center;
+    }
+
+    .error-msg.show { display: block; animation: fadeIn 0.3s ease; }
+
+    /* ===== STEPS ===== */
+    .steps-grid {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 860px; margin: 0 auto;
+      padding: 0 40px 80px;
+    }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .step-card:hover { border-color: rgba(0,229,255,0.3); transform: translateY(-2px); }
+
+    .step-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem; color: var(--accent);
+      letter-spacing: 0.1em; margin-bottom: 12px;
+    }
+
+    .step-icon { font-size: 1.6rem; margin-bottom: 10px; }
+
+    .step-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+    .step-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ===== DASHBOARD ===== */
+    .dashboard {
+      position: relative; z-index: 1;
+      max-width: 1000px; margin: 0 auto;
+      padding: 40px 40px 80px;
+    }
+
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .dash-header h2 { font-size: 1.5rem; font-weight: 800; }
+    .dash-header p { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    .btn-refresh {
+      padding: 9px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Stats cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+      position: relative; overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: attr(data-icon);
+      position: absolute;
+      right: 16px; top: 16px;
+      font-size: 1.4rem; opacity: 0.3;
+    }
+
+    .stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem; color: var(--muted);
+      letter-spacing: 0.08em; margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 2rem; font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-value.green { color: var(--accent2); }
+    .stat-value.cyan { color: var(--accent); }
+    .stat-value.red { color: var(--accent3); }
+
+    .stat-sub {
+      font-size: 0.75rem; color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+
+    .filter-input {
+      flex: 1; min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      padding: 9px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .filter-input:focus { border-color: var(--accent); }
+    .filter-input::placeholder { color: var(--muted); }
+
+    .filter-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      padding: 9px 14px;
+      cursor: pointer; outline: none;
+    }
+
+    /* Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%; border-collapse: collapse;
+    }
+
+    thead { background: var(--surface2); }
+
+    th {
+      padding: 14px 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem; color: var(--muted);
+      letter-spacing: 0.08em;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(26,45,68,0.5);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(0,229,255,0.02); }
+
+    .phone-cell {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.88rem; color: var(--accent);
+      font-weight: 500;
+    }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+
+    .status-pill.online {
+      background: rgba(57,255,110,0.12);
+      color: var(--accent2);
+      border: 1px solid rgba(57,255,110,0.25);
+    }
+
+    .status-pill.offline {
+      background: rgba(90,122,144,0.12);
+      color: var(--muted);
+      border: 1px solid rgba(90,122,144,0.2);
+    }
+
+    .status-pill.pending {
+      background: rgba(255,188,0,0.1);
+      color: #ffbc00;
+      border: 1px solid rgba(255,188,0,0.25);
+    }
+
+    .dot-small {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .time-cell {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem; color: var(--muted);
+    }
+
+    .country-cell { font-size: 1.2rem; }
+
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ===== ADMIN ===== */
+    .admin-page {
+      position: relative; z-index: 1;
+      max-width: 700px; margin: 0 auto;
+      padding: 40px 40px 80px;
+    }
+
+    .admin-login {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--glow);
+      position: relative; overflow: hidden;
+    }
+
+    .admin-login::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent3), transparent);
+    }
+
+    .admin-login h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+    .admin-login p { font-size: 0.85rem; color: var(--muted); margin-bottom: 28px; }
+
+    .admin-panel { display: none; }
+    .admin-panel.show { display: block; animation: fadeIn 0.3s ease; }
+    .admin-login-form.hidden { display: none; }
+
+    .admin-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .admin-section h3 {
+      font-size: 1rem; font-weight: 700; margin-bottom: 4px;
+    }
+
+    .admin-section .sub {
+      font-size: 0.8rem; color: var(--muted); margin-bottom: 20px;
+    }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(26,45,68,0.5);
+    }
+
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-info h4 { font-size: 0.9rem; font-weight: 600; }
+    .toggle-info p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .toggle {
+      width: 44px; height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      border: none;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 3px;
+      width: 18px; height: 18px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .toggle.on { background: rgba(0,229,255,0.2); }
+    .toggle.on::after { left: 23px; background: var(--accent); }
+
+    .btn-danger {
+      padding: 10px 20px;
+      background: rgba(255,77,109,0.1);
+      border: 1px solid rgba(255,77,109,0.3);
+      border-radius: 9px;
+      color: var(--accent3);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .btn-danger:hover { background: rgba(255,77,109,0.2); }
+
+    .btn-success {
+      padding: 10px 20px;
+      background: rgba(57,255,110,0.1);
+      border: 1px solid rgba(57,255,110,0.25);
+      border-radius: 9px;
+      color: var(--accent2);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .btn-success:hover { background: rgba(57,255,110,0.18); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 30px; right: 30px; z-index: 999;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      display: flex; align-items: center; gap: 10px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s ease;
+      max-width: 320px;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(57,255,110,0.3); color: var(--accent2); }
+    .toast.error { border-color: rgba(255,77,109,0.3); color: var(--accent3); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      nav { padding: 12px 20px; }
+      .nav-tabs { display: none; }
+      .hero { padding: 50px 20px 40px; }
+      .pair-container, .steps-grid, .dashboard, .admin-page { padding-left: 16px; padding-right: 16px; }
+      .dash-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      table { font-size: 0.78rem; }
+      th, td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      JACE BOT MD
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('home')">Connecter</button>
+      <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showPage('admin')">Admin</button>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span id="onlineCount">0 en ligne</span>
+    </div>
+  </nav>
+
+  <!-- ========== PAGE HOME ========== -->
+  <div class="page active" id="page-home">
+
+    <div class="hero">
+      <div class="hero-tag">🤖 JACE BOT MD v2.0.0</div>
+      <h1>Connectez WhatsApp<br /><span>sans Telegram</span></h1>
+      <p>Obtenez votre code de couplage directement ici. Aucune application tierce requise — connexion sécurisée, enregistrée et visible dans votre dashboard.</p>
+    </div>
+
+    <div class="pair-container">
+      <div class="pair-card">
+        <h2>🔑 Générer un code de couplage</h2>
+        <p>Entrez votre numéro WhatsApp avec l'indicatif pays pour recevoir votre code de connexion instantanément.</p>
+
+        <div class="input-group">
+          <label>INDICATIF + NUMÉRO</label>
+          <div class="phone-input-wrap">
+            <select class="flag-select" id="countryCode">
+              <option value="241">🇬🇦 +241</option>
+              <option value="33">🇫🇷 +33</option>
+              <option value="225">🇨🇮 +225</option>
+              <option value="237">🇨🇲 +237</option>
+              <option value="243">🇨🇩 +243</option>
+              <option value="221">🇸🇳 +221</option>
+              <option value="212">🇲🇦 +212</option>
+              <option value="213">🇩🇿 +213</option>
+              <option value="216">🇹🇳 +216</option>
+              <option value="229">🇧🇯 +229</option>
+              <option value="226">🇧🇫 +226</option>
+              <option value="223">🇲🇱 +223</option>
+              <option value="228">🇹🇬 +228</option>
+              <option value="227">🇳🇪 +227</option>
+              <option value="235">🇹🇩 +235</option>
+              <option value="236">🇨🇫 +236</option>
+              <option value="242">🇨🇬 +242</option>
+              <option value="255">🇹🇿 +255</option>
+              <option value="254">🇰🇪 +254</option>
+              <option value="234">🇳🇬 +234</option>
+              <option value="27">🇿🇦 +27</option>
+              <option value="1">🇺🇸 +1</option>
+              <option value="44">🇬🇧 +44</option>
+              <option value="49">🇩🇪 +49</option>
+              <option value="34">🇪🇸 +34</option>
+              <option value="55">🇧🇷 +55</option>
+            </select>
+            <input
+              type="tel"
+              class="phone-input"
+              id="phoneInput"
+              placeholder="065491629"
+              maxlength="15"
+            />
+          </div>
+        </div>
+
+        <button class="btn-pair" id="pairBtn" onclick="generatePairCode()">
+          ⚡ Générer mon code
+        </button>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="code-result" id="codeResult">
+          <div class="code-label">VOTRE CODE DE COUPLAGE</div>
+          <div class="code-value" id="codeDisplay">----</div>
+          <p class="code-hint">
+            Ouvrez WhatsApp → <strong>Appareils liés</strong> → <strong>Lier un appareil</strong><br/>
+            Appuyez sur <strong>"Saisir le code"</strong> et entrez ce code.
+          </p>
+          <button class="btn-copy" onclick="copyCode()">📋 Copier le code</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 01</div>
+        <div class="step-icon">📱</div>
+        <h3>Entrez votre numéro</h3>
+        <p>Saisissez votre numéro WhatsApp avec l'indicatif du pays exact.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 02</div>
+        <div class="step-icon">🔑</div>
+        <h3>Obtenez le code</h3>
+        <p>Un code à 8 chiffres est généré instantanément et affiché sur cette page.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 03</div>
+        <div class="step-icon">✅</div>
+        <h3>Liez l'appareil</h3>
+        <p>Dans WhatsApp, accédez à <em>Appareils liés</em> et saisissez le code.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 04</div>
+        <div class="step-icon">🚀</div>
+        <h3>Bot actif !</h3>
+        <p>Votre connexion est enregistrée dans le dashboard. Le bot est opérationnel.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PAGE DASHBOARD ========== -->
+  <div class="page" id="page-dashboard">
+    <div class="dashboard">
+      <div class="dash-header">
+        <div>
+          <h2>📊 Dashboard des connexions</h2>
+          <p>Historique complet des appareils connectés via JACE BOT MD</p>
+        </div>
+        <button class="btn-refresh" onclick="renderDashboard()">↻ Actualiser</button>
+      </div>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card" data-icon="🟢">
+          <div class="stat-label">EN LIGNE</div>
+          <div class="stat-value green" id="stat-online">0</div>
+          <div class="stat-sub">actuellement actifs</div>
+        </div>
+        <div class="stat-card" data-icon="📈">
+          <div class="stat-label">TOTAL</div>
+          <div class="stat-value cyan" id="stat-total">0</div>
+          <div class="stat-sub">connexions enregistrées</div>
+        </div>
+        <div class="stat-card" data-icon="📅">
+          <div class="stat-label">CETTE SEMAINE</div>
+          <div class="stat-value cyan" id="stat-week">0</div>
+          <div class="stat-sub">nouvelles connexions</div>
+        </div>
+        <div class="stat-card" data-icon="🌍">
+          <div class="stat-label">PAYS</div>
+          <div class="stat-value" id="stat-countries">0</div>
+          <div class="stat-sub">différents</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" class="filter-input" id="filterInput" placeholder="🔍 Rechercher par numéro, pays..." oninput="filterTable()" />
+        <select class="filter-select" id="filterStatus" onchange="filterTable()">
+          <option value="">Tous les statuts</option>
+          <option value="online">En ligne</option>
+          <option value="offline">Hors ligne</option>
+          <option value="pending">En attente</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>TÉLÉPHONE</th>
+              <th>PAYS</th>
+              <th>STATUT</th>
+              <th>CONNEXION</th>
+              <th>DERNIÈRE VUE</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="icon">📭</div>
+                  <p>Aucune connexion enregistrée pour l'instant.<br/>Les utilisateurs apparaîtront ici après leur premier appairage.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PAGE ADMIN ========== -->
+  <div class="page" id="page-admin">
+    <div class="admin-page">
+
+      <!-- Login form -->
+      <div class="admin-login">
+        <div class="admin-login-form" id="adminLoginForm">
+          <h2>🔐 Accès Admin</h2>
+          <p>Entrez le code secret pour accéder au panneau d'administration de JACE BOT MD.</p>
+
+          <div class="input-group">
+            <label>MOT DE PASSE ADMIN</label>
+            <input type="password" class="phone-input" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()" />
+          </div>
+
+          <button class="btn-pair" onclick="loginAdmin()">🔓 Accéder</button>
+          <div class="error-msg" id="adminError"></div>
+        </div>
+
+        <!-- Admin panel -->
+        <div class="admin-panel" id="adminPanel">
+          <h2 style="margin-bottom:4px;">⚙️ Panneau Admin</h2>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:28px;">Gérez les paramètres et les utilisateurs du bot.</p>
+
+          <div class="admin-section">
+            <h3>Paramètres bot</h3>
+            <div class="sub">Activez ou désactivez les fonctionnalités en temps réel.</div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>Mode maintenance</h4>
+                <p>Bloque toutes les nouvelles connexions</p>
+              </div>
+              <button class="toggle" id="toggle-maintenance" onclick="toggleSetting('maintenance')"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>Anti-call</h4>
+                <p>Rejette automatiquement les appels entrants</p>
+              </div>
+              <button class="toggle on" id="toggle-antiCall" onclick="toggleSetting('antiCall')"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>Auto-status</h4>
+                <p>Voit et réagit aux statuts WhatsApp</p>
+              </div>
+              <button class="toggle on" id="toggle-autoStatus" onclick="toggleSetting('autoStatus')"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>Anti-lien</h4>
+                <p>Supprime les liens non autorisés en groupe</p>
+              </div>
+              <button class="toggle on" id="toggle-antilink" onclick="toggleSetting('antilink')"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h4>Anti-spam</h4>
+                <p>Protège les groupes contre le spam</p>
+              </div>
+              <button class="toggle on" id="toggle-antispam" onclick="toggleSetting('antispam')"></button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Gestion des utilisateurs</h3>
+            <div class="sub">Actions sur les connexions enregistrées.</div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button class="btn-danger" onclick="clearOfflineUsers()">🗑️ Supprimer hors ligne</button>
+              <button class="btn-success" onclick="exportUsers()">📥 Exporter JSON</button>
+              <button class="btn-danger" onclick="if(confirm('Effacer TOUTES les connexions ?'))clearAllUsers()">⚠️ Tout effacer</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>Limites hebdomadaires</h3>
+            <div class="sub">Contrôlez le nombre de connexions autorisées par semaine.</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="number" class="phone-input" id="weeklyLimit" style="max-width:120px;" value="100" min="1" max="9999" />
+              <button class="btn-success" onclick="saveWeeklyLimit()">💾 Sauvegarder</button>
+            </div>
+          </div>
+
+          <button class="btn-danger" style="margin-top:8px;" onclick="logoutAdmin()">🚪 Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== STORAGE =====
+    const STORAGE_KEY = 'jacebot_users';
+    const SETTINGS_KEY = 'jacebot_settings';
+    const ADMIN_PASS = 'jace2024'; // Mot de passe par défaut, changez-le
+
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || JSON.stringify({
+      maintenance: false,
+      antiCall: true,
+      autoStatus: true,
+      antilink: true,
+      antispam: true,
+      weeklyLimit: 100
+    }));
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
+
+    function saveSettings() {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    // ===== NAVIGATION =====
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+
+      const tabs = document.querySelectorAll('.nav-tab');
+      const idx = { home: 0, dashboard: 1, admin: 2 };
+      tabs[idx[name]]?.classList.add('active');
+
+      if (name === 'dashboard') renderDashboard();
+    }
+
+    // ===== COUNTRY DETECTION =====
+    const countryMap = {
+      '241': '🇬🇦 Gabon',
+      '33': '🇫🇷 France',
+      '225': '🇨🇮 Côte d\'Ivoire',
+      '237': '🇨🇲 Cameroun',
+      '243': '🇨🇩 RD Congo',
+      '242': '🇨🇬 Congo',
+      '221': '🇸🇳 Sénégal',
+      '212': '🇲🇦 Maroc',
+      '213': '🇩🇿 Algérie',
+      '216': '🇹🇳 Tunisie',
+      '229': '🇧🇯 Bénin',
+      '226': '🇧🇫 Burkina Faso',
+      '223': '🇲🇱 Mali',
+      '228': '🇹🇬 Togo',
+      '227': '🇳🇪 Niger',
+      '235': '🇹🇩 Tchad',
+      '236': '🇨🇫 Centrafrique',
+      '255': '🇹🇿 Tanzanie',
+      '254': '🇰🇪 Kenya',
+      '234': '🇳🇬 Nigeria',
+      '27': '🇿🇦 Afrique du Sud',
+      '1': '🇺🇸 États-Unis',
+      '44': '🇬🇧 Royaume-Uni',
+      '49': '🇩🇪 Allemagne',
+      '34': '🇪🇸 Espagne',
+      '55': '🇧🇷 Brésil',
+    };
+
+    // ===== PAIR CODE =====
+    async function generatePairCode() {
+      const country = document.getElementById('countryCode').value;
+      const local = document.getElementById('phoneInput').value.replace(/\D/g, '');
+      const errorEl = document.getElementById('errorMsg');
+      const resultEl = document.getElementById('codeResult');
+      const btn = document.getElementById('pairBtn');
+
+      errorEl.classList.remove('show');
+      resultEl.classList.remove('show');
+
+      if (!local || local.length < 5) {
+        errorEl.textContent = '❌ Numéro invalide. Entrez au moins 5 chiffres.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      if (settings.maintenance) {
+        errorEl.textContent = '🔧 Le bot est en maintenance. Réessayez plus tard.';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      const fullNumber = country + local;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Génération en cours...';
+
+      // Simule l'appel API de génération du code (remplacez par votre vraie API)
+      await delay(2000);
+
+      try {
+        // Appel API Vercel → envoie /pair au bot Telegram
+        const apiRes = await fetch('/api/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: fullNumber })
+        });
+        const apiData = await apiRes.json();
+        if (!apiRes.ok || !apiData.success) throw new Error(apiData.error || 'Erreur serveur');
+        const code = apiData.code;
+
+        // Enregistrer l'utilisateur
+        registerUser(fullNumber, country, code);
+
+        document.getElementById('codeDisplay').textContent = code;
+        resultEl.classList.add('show');
+        showToast('✅ Code généré avec succès !', 'success');
+        updateOnlineCount();
+
+      } catch (err) {
+        errorEl.textContent = '❌ Erreur serveur. Réessayez dans quelques instants.';
+        errorEl.classList.add('show');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Générer mon code';
+    }
+
+    function generateDemoCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        if (i === 4) code += '-';
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return code;
+    }
+
+    function registerUser(phone, countryCode, code) {
+      const users = getUsers();
+      const now = new Date().toISOString();
+      const weekStart = getWeekStart();
+
+      // Vérifie si déjà existant
+      const existingIdx = users.findIndex(u => u.phone === phone);
+
+      if (existingIdx >= 0) {
+        users[existingIdx].lastSeen = now;
+        users[existingIdx].status = 'pending';
+        users[existingIdx].code = code;
+        users[existingIdx].connections = (users[existingIdx].connections || 0) + 1;
+      } else {
+        users.unshift({
+          id: Date.now(),
+          phone,
+          countryCode,
+          country: countryMap[countryCode] || '🌍 Inconnu',
+          status: 'pending',
+          code,
+          connectedAt: now,
+          lastSeen: now,
+          weekStart,
+          connections: 1
+        });
+      }
+
+      saveUsers(users);
+    }
+
+    function copyCode() {
+      const code = document.getElementById('codeDisplay').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('📋 Code copié !', 'success');
+      }).catch(() => {
+        showToast('⚠️ Copie manuelle requise', 'error');
+      });
+    }
+
+    // ===== DASHBOARD =====
+    function renderDashboard() {
+      const users = getUsers();
+      const tbody = document.getElementById('usersTable');
+      const filterText = (document.getElementById('filterInput')?.value || '').toLowerCase();
+      const filterStatus = document.getElementById('filterStatus')?.value || '';
+
+      const filtered = users.filter(u => {
+        const matchText = !filterText || u.phone.includes(filterText) || u.country.toLowerCase().includes(filterText);
+        const matchStatus = !filterStatus || u.status === filterStatus;
+        return matchText && matchStatus;
+      });
+
+      updateStats(users);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              <div class="icon">📭</div>
+              <p>${users.length === 0 ? 'Aucune connexion enregistrée.<br/>Les utilisateurs apparaîtront après leur premier appairage.' : 'Aucun résultat pour ce filtre.'}</p>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((u, i) => `
+        <tr>
+          <td style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:.78rem;">${i + 1}</td>
+          <td class="phone-cell">+${u.phone}</td>
+          <td class="country-cell">${u.country || '🌍'}</td>
+          <td>
+            <span class="status-pill ${u.status}">
+              <span class="dot-small"></span>
+              ${u.status === 'online' ? 'En ligne' : u.status === 'pending' ? 'En attente' : 'Hors ligne'}
+            </span>
+          </td>
+          <td class="time-cell">${formatDate(u.connectedAt)}</td>
+          <td class="time-cell">${timeAgo(u.lastSeen)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function updateStats(users) {
+      const online = users.filter(u => u.status === 'online').length;
+      const weekStart = getWeekStart();
+      const weekly = users.filter(u => u.weekStart === weekStart).length;
+      const countries = new Set(users.map(u => u.countryCode)).size;
+
+      document.getElementById('stat-online').textContent = online;
+      document.getElementById('stat-total').textContent = users.length;
+      document.getElementById('stat-week').textContent = weekly;
+      document.getElementById('stat-countries').textContent = countries;
+    }
+
+    function filterTable() { renderDashboard(); }
+
+    function updateOnlineCount() {
+      const users = getUsers();
+      const online = users.filter(u => u.status === 'online').length;
+      document.getElementById('onlineCount').textContent = online + ' en ligne';
+      document.getElementById('stat-online').textContent = online;
+    }
+
+    // ===== ADMIN =====
+    function loginAdmin() {
+      const pass = document.getElementById('adminPass').value;
+      const errEl = document.getElementById('adminError');
+
+      if (pass === ADMIN_PASS) {
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('show');
+        loadAdminSettings();
+        showToast('🔓 Accès admin accordé', 'success');
+      } else {
+        errEl.textContent = '❌ Mot de passe incorrect.';
+        errEl.classList.add('show');
+      }
+    }
+
+    function logoutAdmin() {
+      document.getElementById('adminLoginForm').classList.remove('hidden');
+      document.getElementById('adminPanel').classList.remove('show');
+      document.getElementById('adminPass').value = '';
+      document.getElementById('adminError').classList.remove('show');
+    }
+
+    function loadAdminSettings() {
+      Object.keys(settings).forEach(key => {
+        const el = document.getElementById('toggle-' + key);
+        if (el) el.className = 'toggle' + (settings[key] ? ' on' : '');
+      });
+      if (document.getElementById('weeklyLimit')) {
+        document.getElementById('weeklyLimit').value = settings.weeklyLimit || 100;
+      }
+    }
+
+    function toggleSetting(key) {
+      settings[key] = !settings[key];
+      const el = document.getElementById('toggle-' + key);
+      if (el) el.className = 'toggle' + (settings[key] ? ' on' : '');
+      saveSettings();
+      showToast(`✅ ${key} : ${settings[key] ? 'activé' : 'désactivé'}`, 'success');
+    }
+
+    function saveWeeklyLimit() {
+      const val = parseInt(document.getElementById('weeklyLimit').value);
+      if (val > 0) {
+        settings.weeklyLimit = val;
+        saveSettings();
+        showToast('💾 Limite sauvegardée : ' + val + '/semaine', 'success');
+      }
+    }
+
+    function clearOfflineUsers() {
+      const users = getUsers().filter(u => u.status !== 'offline');
+      saveUsers(users);
+      showToast('🗑️ Utilisateurs hors ligne supprimés', 'success');
+    }
+
+    function clearAllUsers() {
+      saveUsers([]);
+      showToast('⚠️ Toutes les connexions effacées', 'error');
+      updateOnlineCount();
+    }
+
+    function exportUsers() {
+      const users = getUsers();
+      const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'jacebot-users-' + Date.now() + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Export JSON téléchargé', 'success');
+    }
+
+    // ===== HELPERS =====
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function getWeekStart() {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff)).toISOString().split('T')[0];
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '—';
+      const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diff < 60) return 'il y a ' + diff + 's';
+      if (diff < 3600) return 'il y a ' + Math.floor(diff / 60) + 'min';
+      if (diff < 86400) return 'il y a ' + Math.floor(diff / 3600) + 'h';
+      return 'il y a ' + Math.floor(diff / 86400) + 'j';
+    }
+
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ===== INIT =====
+    updateOnlineCount();
+  </script>
+</body>
+</html>
